@@ -1,0 +1,42 @@
+<!-- popup.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Work Time Price</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <form id="settings-form">
+    <label id="salary-label"></label>
+    <input type="number" id="salary" step="0.01" required>
+
+    <label id="salary-type-label"></label>
+    <select id="salary-type"></select>
+
+    <label id="currency-label"></label>
+    <input type="text" id="currency" maxlength="3" required>
+
+    <label id="working-hours-label"></label>
+    <input type="number" id="hours-per-day" step="0.1">
+
+    <label id="working-days-label"></label>
+    <input type="number" id="days-per-month" step="1">
+
+    <label>
+      <input type="checkbox" id="enabled">
+      <span id="enable-label"></span>
+    </label>
+
+    <label id="language-label"></label>
+    <select id="language">
+      <option value="en">English</option>
+      <option value="it">Italiano</option>
+      <option value="fr">Français</option>
+    </select>
+
+    <button type="submit" id="save-button"></button>
+  </form>
+  <script src="popup.js"></script>
+</body>
+</html>

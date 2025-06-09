@@ -1,0 +1,47 @@
+{
+    "en": {
+        "salary_label": "Salary",
+        "salary_type_hourly": "Hourly",
+        "salary_type_daily": "Daily",
+        "salary_type_monthly": "Monthly",
+        "currency_label": "Currency",
+        "working_hours_per_day_label": "Working hours per day",
+        "working_days_per_month_label": "Working days per month",
+        "enable_label": "Enable extension",
+        "language_label": "Language",
+        "save_button": "Save",
+        "hours_unit": "hours",
+        "days_unit": "days",
+        "months_unit": "months"
+    },
+    "it": {
+        "salary_label": "Retribuzione",
+        "salary_type_hourly": "Oraria",
+        "salary_type_daily": "Giornaliera",
+        "salary_type_monthly": "Mensile",
+        "currency_label": "Valuta",
+        "working_hours_per_day_label": "Ore lavorative al giorno",
+        "working_days_per_month_label": "Giorni lavorativi al mese",
+        "enable_label": "Attiva estensione",
+        "language_label": "Lingua",
+        "save_button": "Salva",
+        "hours_unit": "ore",
+        "days_unit": "giorni",
+        "months_unit": "mesi"
+    },
+    "fr": {
+        "salary_label": "Salaire",
+        "salary_type_hourly": "Horaire",
+        "salary_type_daily": "Journalier",
+        "salary_type_monthly": "Mensuel",
+        "currency_label": "Devise",
+        "working_hours_per_day_label": "Heures par jour",
+        "working_days_per_month_label": "Jours par mois",
+        "enable_label": "Activer extension",
+        "language_label": "Langue",
+        "save_button": "Enregistrer",
+        "hours_unit": "heures",
+        "days_unit": "jours",
+        "months_unit": "mois"
+    }
+}
