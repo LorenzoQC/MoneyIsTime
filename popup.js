@@ -7,6 +7,7 @@ const defaults = {
     enabled: true,
     language: 'en'
 };
+
 let translations;
 
 async function loadTranslations() {
@@ -16,21 +17,20 @@ async function loadTranslations() {
 
 function applyI18n(lang) {
     const t = translations[lang] || translations.en;
-    document.getElementById('salary-label').textContent = t.salary_label;
-    // no header label for salary type, options describe it
-    document.getElementById('salary-type-label').textContent = '';
-    const st = document.getElementById('salary-type');
-    st.innerHTML = st.innerHTML = `
+
+    document.getElementById('header-title').textContent = t.settings_label;
+    document.getElementById('group-salary-title').textContent = t.salary_label;
+
+    const salaryType = document.getElementById('salary-type');
+    salaryType.innerHTML = `
         <option value="hourly">${t.salary_type_hourly}</option>
         <option value="daily">${t.salary_type_daily}</option>
         <option value="monthly">${t.salary_type_monthly}</option>
     `;
-    document.getElementById('currency-label').textContent = t.currency_label;
+
     document.getElementById('working-hours-label').textContent = t.working_hours_per_day_label;
     document.getElementById('working-days-label').textContent = t.working_days_per_month_label;
-    document.getElementById('enable-label').textContent = t.enable_label;
-    document.getElementById('language-label').textContent = t.language_label;
-    document.getElementById('save-button').textContent = t.save_button;
+    document.getElementById('group-working-title').textContent = t.working_time_group_label;
 }
 
 function loadOptions() {
@@ -63,5 +63,6 @@ function saveOptions(e) {
 document.addEventListener('DOMContentLoaded', async () => {
     await loadTranslations();
     loadOptions();
-    document.getElementById('settings-form').addEventListener('submit', saveOptions);
+    document.getElementById('settings-form').addEventListener('change', saveOptions);
+    document.getElementById('language').addEventListener('change', e => applyI18n(e.target.value));
 });

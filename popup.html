@@ -1,42 +1,68 @@
 <!-- popup.html -->
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <title>Work Time Price</title>
   <link rel="stylesheet" href="popup.css">
 </head>
+
 <body>
   <form id="settings-form">
-    <label id="salary-label"></label>
-    <input type="number" id="salary" step="0.01" required>
+    <div class="header">
+      <div class="header-title" id="header-title">Settings</div>
+      <select id="language">
+        <option value="ar">العربية</option>
+        <option value="de">Deutsch</option>
+        <option value="en">English</option>
+        <option value="es">Español</option>
+        <option value="fr">Français</option>
+        <option value="hi">हिन्दी</option>
+        <option value="it">Italiano</option>
+        <option value="ja">日本語</option>
+        <option value="pt-BR">Português</option>
+        <option value="ru">Русский</option>
+        <option value="tr">Türkçe</option>
+        <option value="zh-CN">简体中文</option>
+      </select>
+    </div>
 
-    <label id="salary-type-label"></label>
-    <select id="salary-type"></select>
+    <div class="toggle-container">
+      <label class="switch">
+        <input type="checkbox" id="enabled">
+        <span class="slider"></span>
+      </label>
+    </div>
 
-    <label id="currency-label"></label>
-    <input type="text" id="currency" maxlength="3" required>
+    <div class="group-box">
+      <div class="group-title" id="group-salary-title">Salary</div>
+      <div class="salary-container">
+        <input type="number" id="salary" step="0.5" min="0.01" required>
+        <select id="currency" class="currency-select">
+          <option value="EUR">EUR</option>
+          <option value="USD">USD</option>
+        </select>
+      </div>
 
-    <label id="working-hours-label"></label>
-    <input type="number" id="hours-per-day" step="0.1">
+      <label id="salary-type-label"></label>
+      <select id="salary-type"></select>
+    </div>
 
-    <label id="working-days-label"></label>
-    <input type="number" id="days-per-month" step="1">
+    <div class="group-box">
+      <div class="group-title" id="group-working-title">Working Time</div>
+      <div class="working-time-grid">
+        <label for="hours-per-day" id="working-hours-label">Working hours per day</label>
+        <input type="number" id="hours-per-day" step="0.5" min="0.5" max="24" required>
 
-    <label>
-      <input type="checkbox" id="enabled">
-      <span id="enable-label"></span>
-    </label>
+        <label for="days-per-month" id="working-days-label">Working days per month</label>
+        <input type="number" id="days-per-month" step="1" min="1" max="31" required>
+      </div>
+    </div>
 
-    <label id="language-label"></label>
-    <select id="language">
-      <option value="en">English</option>
-      <option value="it">Italiano</option>
-      <option value="fr">Français</option>
-    </select>
-
-    <button type="submit" id="save-button"></button>
+    <img src="icons/icon-nobg.png" alt="Logo" class="logo">
   </form>
   <script src="popup.js"></script>
 </body>
+
 </html>
