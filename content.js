@@ -41,20 +41,39 @@
     const currencySymbols = Object.keys(symbolMap).map(escapeRegex).join('|');
     //const priceRegex = new RegExp(`(?:(${currencySymbols})[\u00A0\s]*([\d.,]+)|([\d.,]+)[\u00A0\s]*(${currencySymbols}))`, 'gu');
     const priceRegex = new RegExp(
-  `(${currencySymbols})[\\s\\u00A0\\u202F]*([\\d.,]+)|([\\d.,]+)[\\s\\u00A0\\u202F]*(${currencySymbols})`,
-  'gu'
-);
+        `(${currencySymbols})[\\s\\u00A0\\u202F]*([\\d.,]+)|([\\d.,]+)[\\s\\u00A0\\u202F]*(${currencySymbols})`,
+        'gu'
+    );
 
 
     function normalizePriceString(raw) {
         const dotCount = (raw.match(/\./g) || []).length;
         const commaCount = (raw.match(/,/g) || []).length;
-        if (commaCount > 0 && (dotCount === 0 || commaCount > dotCount)) {
+
+        // Both separators → EU format
+        if (dotCount > 0 && commaCount > 0) {
             return raw.replace(/\./g, '').replace(',', '.');
-        } else {
-            return raw.replace(/,/g, '');
         }
+
+        // Only comma (e.g. "199,99") → decimal
+        if (commaCount > 0 && dotCount === 0) {
+            return raw.replace(',', '.');
+        }
+
+        // Only dot and matches X.XXX (e.g. "22.900") → thousands
+        if (dotCount === 1 && /^\d{1,3}\.\d{3}$/.test(raw)) {
+            return raw.replace(/\./g, '');
+        }
+
+        // Only dot (e.g. "199.99") → US decimal
+        if (dotCount > 0 && commaCount === 0) {
+            return raw;
+        }
+
+        // No separator → assume raw integer
+        return raw;
     }
+
 
     function scanTextNodes(root) {
         const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
