@@ -4,6 +4,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             .then(res => res.json())
             .then(data => sendResponse({ rates: data.rates }))
             .catch(err => sendResponse({ error: err.message }));
-        return true; // keep message channel open
+        return true;
+    }
+    
+    if (message.type === 'getTranslations') {
+        fetch(chrome.runtime.getURL('translations.json'))
+            .then(res => res.json())
+            .then(data => sendResponse({ translations: data }))
+            .catch(err => sendResponse({ error: err.message }));
+        return true;
     }
 });
