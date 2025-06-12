@@ -85,7 +85,7 @@
             if (!text || !/[€$£¥₹]/.test(text)) continue;
 
             const matches = [...text.matchAll(priceRegex)];
-
+            
             for (const match of matches) {
                 const [full, sym1, val1, val2, sym2] = match;
                 const symbol = sym1 || sym2;
@@ -133,8 +133,9 @@
         if (h) parts.push(`${h} ${translations.hours_unit}`);
         if (min) parts.push(`${min} ${translations.minutes_unit}`);
 
+        const isCompact = document.querySelectorAll('.money-is-time-processed').length > 10;
         const span = document.createElement('span');
-        span.textContent = parts.join(' ');
+        span.textContent = isCompact ? `${Math.round((conv / hourly) * 10) / 10}h` : parts.join(' ');
         span.style.marginLeft = '4px';
         span.style.backgroundColor = 'rgba(100, 108, 255, 0.12)';
         span.style.color = 'inherit';
@@ -146,6 +147,7 @@
         span.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
         span.style.border = '1px solid rgba(100, 108, 255, 0.2)';
         span.style.whiteSpace = 'nowrap';
+
 
         el.insertAdjacentElement('afterend', span);
         console.log(`[MoneyIsTime] Annotated ${amount} ${code} → ${parts.join(' ')}`);
