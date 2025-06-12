@@ -31,7 +31,7 @@
     }
 
     const symbolMap = {
-        '$': 'USD', '€': 'EUR', '£': 'GBP', '¥': 'JPY', '₹': 'INR', 'C$': 'CAD', 'A$': 'AUD', 'CHF': 'CHF', 'RUB': 'RUB'
+        '$': 'USD', '€': 'EUR', '£': 'GBP', '¥': 'JPY', '₹': 'INR', 'C$': 'CAD', 'A$': 'AUD', 'CHF': 'CHF', 'RUB': 'RUB', 'R$': 'BRL', '₺': 'TRY'
     };
 
     function escapeRegex(s) {
@@ -39,7 +39,6 @@
     }
 
     const currencySymbols = Object.keys(symbolMap).map(escapeRegex).join('|');
-    //const priceRegex = new RegExp(`(?:(${currencySymbols})[\u00A0\s]*([\d.,]+)|([\d.,]+)[\u00A0\s]*(${currencySymbols}))`, 'gu');
     const priceRegex = new RegExp(
         `(${currencySymbols})[\\s\\u00A0\\u202F]*([\\d.,]+)|([\\d.,]+)[\\s\\u00A0\\u202F]*(${currencySymbols})`,
         'gu'
@@ -86,11 +85,7 @@
             if (!text || !/[€$£¥₹]/.test(text)) continue;
 
             const matches = [...text.matchAll(priceRegex)];
-            if (matches.length === 0) {
-                // Debugging aid:
-                console.debug('[MoneyIsTime] No match in text node:', text);
-            }
-
+            
             for (const match of matches) {
                 const [full, sym1, val1, val2, sym2] = match;
                 const symbol = sym1 || sym2;
