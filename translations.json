@@ -12,7 +12,8 @@
     "minutes_unit": "minutes",
     "hours_unit": "hours",
     "days_unit": "days",
-    "months_unit": "months"
+    "months_unit": "months",
+    "years_unit": "years"
   },
   "it": {
     "settings_label": "Impostazioni",
@@ -27,7 +28,8 @@
     "minutes_unit": "minuti",
     "hours_unit": "ore",
     "days_unit": "giorni",
-    "months_unit": "mesi"
+    "months_unit": "mesi",
+    "years_unit": "anni"
   },
   "fr": {
     "settings_label": "Paramètres",
@@ -42,7 +44,8 @@
     "minutes_unit": "minutes",
     "hours_unit": "heures",
     "days_unit": "jours",
-    "months_unit": "mois"
+    "months_unit": "mois",
+    "years_unit": "années"
   },
   "es": {
     "settings_label": "Configuración",
@@ -57,7 +60,8 @@
     "minutes_unit": "minutos",
     "hours_unit": "horas",
     "days_unit": "días",
-    "months_unit": "meses"
+    "months_unit": "meses",
+    "years_unit": "años"
   },
   "de": {
     "settings_label": "Einstellungen",
@@ -72,7 +76,8 @@
     "minutes_unit": "Minuten",
     "hours_unit": "Stunden",
     "days_unit": "Tage",
-    "months_unit": "Monate"
+    "months_unit": "Monate",
+    "years_unit": "Jahre"
   },
   "pt-BR": {
     "settings_label": "Configurações",
@@ -87,7 +92,8 @@
     "minutes_unit": "minutos",
     "hours_unit": "horas",
     "days_unit": "dias",
-    "months_unit": "meses"
+    "months_unit": "meses",
+    "years_unit": "anos"
   },
   "zh-CN": {
     "settings_label": "设置",
@@ -102,7 +108,8 @@
     "minutes_unit": "分钟",
     "hours_unit": "小时",
     "days_unit": "天",
-    "months_unit": "月"
+    "months_unit": "月",
+    "years_unit": "年"
   },
   "ja": {
     "settings_label": "設定",
@@ -117,7 +124,8 @@
     "minutes_unit": "分",
     "hours_unit": "時間",
     "days_unit": "日",
-    "months_unit": "ヶ月"
+    "months_unit": "ヶ月",
+    "years_unit": "年"
   },
   "ru": {
     "settings_label": "Настройки",
@@ -132,7 +140,8 @@
     "minutes_unit": "минут",
     "hours_unit": "часов",
     "days_unit": "дней",
-    "months_unit": "месяцев"
+    "months_unit": "месяцев",
+    "years_unit": "лет"
   },
   "hi": {
     "settings_label": "सेटिंग्स",
@@ -147,7 +156,8 @@
     "minutes_unit": "मिनट",
     "hours_unit": "घंटे",
     "days_unit": "दिन",
-    "months_unit": "महीने"
+    "months_unit": "महीने",
+    "years_unit": "साल"
   },
   "ar": {
     "settings_label": "الإعدادات",
@@ -162,7 +172,8 @@
     "minutes_unit": "دقائق",
     "hours_unit": "ساعات",
     "days_unit": "أيام",
-    "months_unit": "أشهر"
+    "months_unit": "أشهر",
+    "years_unit": "سنوات"
   },
   "tr": {
     "settings_label": "Ayarlar",
@@ -177,6 +188,7 @@
     "minutes_unit": "dakika",
     "hours_unit": "saat",
     "days_unit": "gün",
-    "months_unit": "ay"
+    "months_unit": "ay",
+    "years_unit": "yıl"
   }
 }

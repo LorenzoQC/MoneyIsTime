@@ -119,20 +119,25 @@
         if (settings.salaryType === 'daily') hourly /= settings.hoursPerDay;
         if (settings.salaryType === 'monthly') hourly /= (settings.daysPerMonth * settings.hoursPerDay);
         let hrs = conv / hourly;
+        
+        const totalHoursInMonth = settings.daysPerMonth * settings.hoursPerDay;
+        const totalHoursInYear = totalHoursInMonth * 12;
 
-        const m = Math.floor(hrs / (settings.daysPerMonth * settings.hoursPerDay));
-        hrs -= m * settings.daysPerMonth * settings.hoursPerDay;
+        const y = Math.floor(hrs / totalHoursInYear);
+        hrs -= y * totalHoursInYear;
+        const m = Math.floor(hrs / totalHoursInMonth);
+        hrs -= m * totalHoursInMonth;
         const d = Math.floor(hrs / settings.hoursPerDay);
         hrs -= d * settings.hoursPerDay;
         const h = Math.floor(hrs);
         const min = Math.round((hrs - h) * 60);
 
         const parts = [];
+        if (y) parts.push(`${y} ${translations.years_unit}`);
         if (m) parts.push(`${m} ${translations.months_unit}`);
         if (d) parts.push(`${d} ${translations.days_unit}`);
         if (h) parts.push(`${h} ${translations.hours_unit}`);
         if (min) parts.push(`${min} ${translations.minutes_unit}`);
-
         const isCompact = document.querySelectorAll('.money-is-time-processed').length > 10;
         const span = document.createElement('span');
         span.textContent = isCompact ? `${Math.round((conv / hourly) * 10) / 10}h` : parts.join(' ');
