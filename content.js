@@ -85,7 +85,7 @@
             if (!text || !/[€$£¥₹]/.test(text)) continue;
 
             const matches = [...text.matchAll(priceRegex)];
-            
+
             for (const match of matches) {
                 const [full, sym1, val1, val2, sym2] = match;
                 const symbol = sym1 || sym2;
@@ -136,10 +136,16 @@
         const span = document.createElement('span');
         span.textContent = parts.join(' ');
         span.style.marginLeft = '4px';
-        span.style.background = '#eef';
-        span.style.padding = '2px 4px';
-        span.style.borderRadius = '4px';
-        span.style.fontSize = '0.85em';
+        span.style.backgroundColor = 'rgba(100, 108, 255, 0.12)';
+        span.style.color = 'inherit';
+        span.style.fontSize = '0.82em';
+        span.style.padding = '4px 6px';
+        span.style.borderRadius = '6px';
+        span.style.lineHeight = '1.2';
+        span.style.fontWeight = '500';
+        span.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+        span.style.border = '1px solid rgba(100, 108, 255, 0.2)';
+        span.style.whiteSpace = 'nowrap';
 
         el.insertAdjacentElement('afterend', span);
         console.log(`[MoneyIsTime] Annotated ${amount} ${code} → ${parts.join(' ')}`);
