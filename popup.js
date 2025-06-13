@@ -60,9 +60,68 @@ function saveOptions(e) {
     chrome.storage.local.set(opts);
 }
 
+async function getCurrentTabDomain() {
+    return new Promise((resolve) => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            try {
+                const url = new URL(tabs[0].url);
+                resolve(url.hostname);
+            } catch (e) {
+                resolve(null);
+            }
+        });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     await loadTranslations();
     loadOptions();
+
     document.getElementById('settings-form').addEventListener('change', saveOptions);
     document.getElementById('language').addEventListener('change', e => applyI18n(e.target.value));
+
+    const excludeButton = document.getElementById('exclude-site-button');
+
+    function setButtonState(domain, excluded) {
+        excludeButton.classList.toggle('exclude', !excluded);
+        excludeButton.classList.toggle('include', excluded);
+
+        if (excluded) {
+            excludeButton.textContent = `Include ${domain}`;
+        } else {
+            excludeButton.textContent = `Exclude ${domain}`;
+        }
+    }
+
+    getCurrentTabDomain().then(domain => {
+        if (!domain) {
+            excludeButton.disabled = true;
+            excludeButton.textContent = 'Cannot determine site';
+            return;
+        }
+        excludeButton.dataset.domain = domain;
+
+        chrome.storage.local.get({ blacklist: [] }, ({ blacklist }) => {
+            const isExcluded = blacklist.includes(domain);
+            setButtonState(domain, isExcluded);
+        });
+    });
+
+    excludeButton.addEventListener('click', () => {
+        const domain = excludeButton.dataset.domain;
+        if (!domain) return;
+
+        chrome.storage.local.get({ blacklist: [] }, ({ blacklist }) => {
+            const isCurrentlyExcluded = blacklist.includes(domain);
+            let newList;
+            if (isCurrentlyExcluded) {
+                newList = blacklist.filter(d => d !== domain);
+            } else {
+                newList = [...blacklist, domain];
+            }
+            chrome.storage.local.set({ blacklist: newList }, () => {
+                setButtonState(domain, !isCurrentlyExcluded);
+            });
+        });
+    });
 });

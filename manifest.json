@@ -11,6 +11,7 @@
         "scripting"
     ],
     "host_permissions": [
+        "<all_urls>",
         "https://open.er-api.com/*"
     ],
     "action": {

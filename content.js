@@ -1,4 +1,11 @@
 (async () => {
+    const domain = location.hostname;
+    const blacklistCheck = await new Promise(r => chrome.storage.local.get(['blacklist'], r));
+    if (Array.isArray(blacklistCheck.blacklist) && blacklistCheck.blacklist.includes(domain)) {
+        console.log(`[MoneyIsTime] Skipped on blacklisted domain: ${domain}`);
+        return;
+    }
+
     const settings = await new Promise(r => chrome.storage.local.get(
         ['salary', 'salaryType', 'currency', 'hoursPerDay', 'daysPerMonth', 'enabled', 'language'], r
     ));
@@ -85,7 +92,7 @@
             if (!text || !/[€$£¥₹]/.test(text)) continue;
 
             const matches = [...text.matchAll(priceRegex)];
-            
+
             for (const match of matches) {
                 const [full, sym1, val1, val2, sym2] = match;
                 const symbol = sym1 || sym2;
@@ -119,7 +126,7 @@
         if (settings.salaryType === 'daily') hourly /= settings.hoursPerDay;
         if (settings.salaryType === 'monthly') hourly /= (settings.daysPerMonth * settings.hoursPerDay);
         let hrs = conv / hourly;
-        
+
         const totalHoursInMonth = settings.daysPerMonth * settings.hoursPerDay;
         const totalHoursInYear = totalHoursInMonth * 12;
 
