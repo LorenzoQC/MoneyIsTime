@@ -96,16 +96,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         excludeButton.disabled = false;
 
         if (excluded) {
-            excludeButton.textContent = `Include ${domain}`;
+            excludeButton.textContent = `${translations[lang].include_site} ${domain}`;
         } else {
-            excludeButton.textContent = `Exclude ${domain}`;
+            excludeButton.textContent = `${translations[lang].exclude_site} ${domain}`;
         }
     }
 
     const domain = await getCurrentTabDomain();
     if (!domain) {
         excludeButton.disabled = true;
-        excludeButton.textContent = 'Cannot determine site';
+        excludeButton.textContent = translations[lang].cannot_determine_site;
     } else {
         excludeButton.dataset.domain = domain;
         chrome.storage.local.get({ blacklist: [] }, ({ blacklist }) => {

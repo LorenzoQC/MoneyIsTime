@@ -13,7 +13,10 @@
     "hours_unit": "hours",
     "days_unit": "days",
     "months_unit": "months",
-    "years_unit": "years"
+    "years_unit": "years",
+    "exclude_site": "Exclude",
+    "include_site": "Include",
+    "cannot_determine_site": "Cannot determine site"
   },
   "it": {
     "settings_label": "Impostazioni",
@@ -29,7 +32,10 @@
     "hours_unit": "ore",
     "days_unit": "giorni",
     "months_unit": "mesi",
-    "years_unit": "anni"
+    "years_unit": "anni",
+    "exclude_site": "Escludi",
+    "include_site": "Includi",
+    "cannot_determine_site": "Impossibile determinare il sito"
   },
   "fr": {
     "settings_label": "Paramètres",
@@ -45,7 +51,10 @@
     "hours_unit": "heures",
     "days_unit": "jours",
     "months_unit": "mois",
-    "years_unit": "années"
+    "years_unit": "années",
+    "exclude_site": "Exclure",
+    "include_site": "Inclure",
+    "cannot_determine_site": "Impossible de déterminer le site"
   },
   "es": {
     "settings_label": "Configuración",
@@ -61,7 +70,10 @@
     "hours_unit": "horas",
     "days_unit": "días",
     "months_unit": "meses",
-    "years_unit": "años"
+    "years_unit": "años",
+    "exclude_site": "Excluir",
+    "include_site": "Incluir",
+    "cannot_determine_site": "No se puede determinar el sitio"
   },
   "de": {
     "settings_label": "Einstellungen",
@@ -77,7 +89,10 @@
     "hours_unit": "Stunden",
     "days_unit": "Tage",
     "months_unit": "Monate",
-    "years_unit": "Jahre"
+    "years_unit": "Jahre",
+    "exclude_site": "Ausschließen",
+    "include_site": "Einbeziehen",
+    "cannot_determine_site": "Seite kann nicht bestimmt werden"
   },
   "pt-BR": {
     "settings_label": "Configurações",
@@ -93,7 +108,10 @@
     "hours_unit": "horas",
     "days_unit": "dias",
     "months_unit": "meses",
-    "years_unit": "anos"
+    "years_unit": "anos",
+    "exclude_site": "Excluir",
+    "include_site": "Incluir",
+    "cannot_determine_site": "Não foi possível determinar o site"
   },
   "zh-CN": {
     "settings_label": "设置",
@@ -109,7 +127,10 @@
     "hours_unit": "小时",
     "days_unit": "天",
     "months_unit": "月",
-    "years_unit": "年"
+    "years_unit": "年",
+    "exclude_site": "排除",
+    "include_site": "包含",
+    "cannot_determine_site": "无法确定站点"
   },
   "ja": {
     "settings_label": "設定",
@@ -125,7 +146,10 @@
     "hours_unit": "時間",
     "days_unit": "日",
     "months_unit": "ヶ月",
-    "years_unit": "年"
+    "years_unit": "年",
+    "exclude_site": "除外",
+    "include_site": "含める",
+    "cannot_determine_site": "サイトを特定できません"
   },
   "ru": {
     "settings_label": "Настройки",
@@ -141,7 +165,10 @@
     "hours_unit": "часов",
     "days_unit": "дней",
     "months_unit": "месяцев",
-    "years_unit": "лет"
+    "years_unit": "лет",
+    "exclude_site": "Исключить",
+    "include_site": "Включить",
+    "cannot_determine_site": "Невозможно определить сайт"
   },
   "hi": {
     "settings_label": "सेटिंग्स",
@@ -157,7 +184,10 @@
     "hours_unit": "घंटे",
     "days_unit": "दिन",
     "months_unit": "महीने",
-    "years_unit": "साल"
+    "years_unit": "साल",
+    "exclude_site": "निकालें",
+    "include_site": "शामिल करें",
+    "cannot_determine_site": "साइट निर्धारित नहीं की जा सकती"
   },
   "ar": {
     "settings_label": "الإعدادات",
@@ -173,7 +203,10 @@
     "hours_unit": "ساعات",
     "days_unit": "أيام",
     "months_unit": "أشهر",
-    "years_unit": "سنوات"
+    "years_unit": "سنوات",
+    "exclude_site": "استبعاد",
+    "include_site": "تضمين",
+    "cannot_determine_site": "لا يمكن تحديد الموقع"
   },
   "tr": {
     "settings_label": "Ayarlar",
@@ -189,6 +222,9 @@
     "hours_unit": "saat",
     "days_unit": "gün",
     "months_unit": "ay",
-    "years_unit": "yıl"
+    "years_unit": "yıl",
+    "exclude_site": "Hariç tut",
+    "include_site": "Dahil et",
+    "cannot_determine_site": "Site belirlenemiyor"
   }
 }
