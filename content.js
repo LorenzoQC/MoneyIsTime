@@ -80,6 +80,10 @@
         return raw;
     }
 
+    function getUnitAbbr(unitString) {
+        return unitString.charAt(0).toLowerCase();
+    }  
+
 
     function scanTextNodes(root) {
         const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
@@ -145,10 +149,17 @@
         if (d) parts.push(`${d} ${translations.days_unit}`);
         if (h) parts.push(`${h} ${translations.hours_unit}`);
         if (min) parts.push(`${min} ${translations.minutes_unit}`);
+        
+        const yAbbr = getUnitAbbr(translations.years_unit);
+        const mAbbr = getUnitAbbr(translations.months_unit);
+        const dAbbr = getUnitAbbr(translations.days_unit);
+        const hAbbr = getUnitAbbr(translations.hours_unit);
+        const minAbbr = getUnitAbbr(translations.minutes_unit);
+        
         const isCompact = document.querySelectorAll('.money-is-time-processed').length > 15;
         const span = document.createElement('span');
         span.textContent = isCompact
-            ? (y ? `${y}y ${m}m` : m ? `${m}m ${d}d` : d ? `${d}d ${h}h` : h ? `${h}h ${min}m` : `${min}m`)
+            ? (y ? `${y}${yAbbr} ${m}${mAbbr}` : m ? `${m}${mAbbr} ${d}${dAbbr}` : d ? `${d}${dAbbr} ${h}${hAbbr}` : h ? `${h}${hAbbr} ${min}${minAbbr}` : `${min}${minAbbr}`)
             : parts.slice(0, 2).join(' ');
         span.style.marginLeft = '4px';
         span.style.backgroundColor = 'rgba(100, 108, 255, 0.12)';
