@@ -172,5 +172,5 @@
 
     setTimeout(() => {
         scanTextNodes(document.body);
-    }, 300);
+    }, 120);
 })();
