@@ -22,11 +22,13 @@ function applyI18n(lang) {
     document.getElementById('group-salary-title').textContent = t.salary_label;
 
     const salaryType = document.getElementById('salary-type');
+    const current = salaryType.value;
     salaryType.innerHTML = `
         <option value="hourly">${t.salary_type_hourly}</option>
         <option value="daily">${t.salary_type_daily}</option>
         <option value="monthly">${t.salary_type_monthly}</option>
     `;
+    if (current) salaryType.value = current;
 
     document.getElementById('working-hours-label').textContent = t.working_hours_per_day_label;
     document.getElementById('working-days-label').textContent = t.working_days_per_month_label;
@@ -35,6 +37,8 @@ function applyI18n(lang) {
 
 function loadOptions() {
     chrome.storage.local.get(defaults, opts => {
+        applyI18n(opts.language);
+
         document.getElementById('salary').value = opts.salary;
         document.getElementById('salary-type').value = opts.salaryType;
         document.getElementById('currency').value = opts.currency;
@@ -42,7 +46,6 @@ function loadOptions() {
         document.getElementById('days-per-month').value = opts.daysPerMonth;
         document.getElementById('enabled').checked = opts.enabled;
         document.getElementById('language').value = opts.language;
-        applyI18n(opts.language);
     });
 }
 
@@ -61,12 +64,12 @@ function saveOptions(e) {
 }
 
 async function getCurrentTabDomain() {
-    return new Promise((resolve) => {
-        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    return new Promise(resolve => {
+        chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
             try {
                 const url = new URL(tabs[0].url);
                 resolve(url.hostname);
-            } catch (e) {
+            } catch {
                 resolve(null);
             }
         });
@@ -78,13 +81,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadOptions();
 
     document.getElementById('settings-form').addEventListener('change', saveOptions);
-    document.getElementById('language').addEventListener('change', e => applyI18n(e.target.value));
+    document.getElementById('language').addEventListener('change', e => {
+        const salaryTypeSelect = document.getElementById('salary-type');
+        const currentSalaryType = salaryTypeSelect.value;
+        applyI18n(e.target.value);
+        salaryTypeSelect.value = currentSalaryType;
+    });
 
     const excludeButton = document.getElementById('exclude-site-button');
 
     function setButtonState(domain, excluded) {
         excludeButton.classList.toggle('exclude', !excluded);
         excludeButton.classList.toggle('include', excluded);
+        excludeButton.disabled = false;
 
         if (excluded) {
             excludeButton.textContent = `Include ${domain}`;
@@ -93,34 +102,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    getCurrentTabDomain().then(domain => {
-        if (!domain) {
-            excludeButton.disabled = true;
-            excludeButton.textContent = 'Cannot determine site';
-            return;
-        }
+    const domain = await getCurrentTabDomain();
+    if (!domain) {
+        excludeButton.disabled = true;
+        excludeButton.textContent = 'Cannot determine site';
+    } else {
         excludeButton.dataset.domain = domain;
-
         chrome.storage.local.get({ blacklist: [] }, ({ blacklist }) => {
-            const isExcluded = blacklist.includes(domain);
-            setButtonState(domain, isExcluded);
+            setButtonState(domain, blacklist.includes(domain));
         });
-    });
+    }
 
     excludeButton.addEventListener('click', () => {
         const domain = excludeButton.dataset.domain;
-        if (!domain) return;
-
         chrome.storage.local.get({ blacklist: [] }, ({ blacklist }) => {
-            const isCurrentlyExcluded = blacklist.includes(domain);
-            let newList;
-            if (isCurrentlyExcluded) {
-                newList = blacklist.filter(d => d !== domain);
-            } else {
-                newList = [...blacklist, domain];
-            }
+            const isExcluded = blacklist.includes(domain);
+            const newList = isExcluded ? blacklist.filter(d => d !== domain) : [...blacklist, domain];
             chrome.storage.local.set({ blacklist: newList }, () => {
-                setButtonState(domain, !isCurrentlyExcluded);
+                setButtonState(domain, !isExcluded);
             });
         });
     });
