@@ -158,21 +158,23 @@
         
         const isCompact = document.querySelectorAll('.money-is-time-processed').length > 15;
         const span = document.createElement('span');
-        span.textContent = isCompact
+        const timeText = isCompact
             ? (y ? `${y}${yAbbr} ${m}${mAbbr}` : m ? `${m}${mAbbr} ${d}${dAbbr}` : d ? `${d}${dAbbr} ${h}${hAbbr}` : h ? `${h}${hAbbr} ${min}${minAbbr}` : `${min}${minAbbr}`)
             : parts.slice(0, 2).join(' ');
-        span.style.marginLeft = '4px';
-        span.style.backgroundColor = 'rgba(100, 108, 255, 0.12)';
+        span.textContent = `🕒 ${timeText}`;
+        
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        span.style.backgroundColor = prefersDark ? 'rgba(100, 108, 255, 0.2)' : 'rgba(100, 108, 255, 0.12)';
         span.style.color = 'inherit';
+        span.style.border = prefersDark ? '1px solid rgba(100, 108, 255, 0.4)' : '1px solid rgba(100, 108, 255, 0.2)';
+        span.style.marginLeft = '4px';
         span.style.fontSize = '0.82em';
         span.style.padding = '4px 6px';
         span.style.borderRadius = '6px';
         span.style.lineHeight = '1.2';
         span.style.fontWeight = '500';
         span.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
-        span.style.border = '1px solid rgba(100, 108, 255, 0.2)';
         span.style.whiteSpace = 'nowrap';
-
 
         el.insertAdjacentElement('afterend', span);
         console.log(`[MoneyIsTime] Annotated ${amount} ${code} → ${parts.join(' ')}`);

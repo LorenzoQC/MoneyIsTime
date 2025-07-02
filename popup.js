@@ -9,6 +9,8 @@ const defaults = {
 };
 
 let translations;
+let currentDomain = null;
+let currentBlacklist = [];
 
 async function loadTranslations() {
     const res = await fetch(chrome.runtime.getURL('translations.json'));
@@ -33,6 +35,20 @@ function applyI18n(lang) {
     document.getElementById('working-hours-label').textContent = t.working_hours_per_day_label;
     document.getElementById('working-days-label').textContent = t.working_days_per_month_label;
     document.getElementById('group-working-title').textContent = t.working_time_group_label;
+
+    const excludeButton = document.getElementById('exclude-site-button');
+    if (excludeButton.disabled) {
+        excludeButton.textContent = t.cannot_determine_site;
+    }
+}
+
+function setExcludeButton(domain, blacklist, lang) {
+    const excludeButton = document.getElementById('exclude-site-button');
+    const isExcluded = blacklist.includes(domain);
+    excludeButton.classList.toggle('exclude', !isExcluded);
+    excludeButton.classList.toggle('include', isExcluded);
+    excludeButton.disabled = false;
+    excludeButton.textContent = `${translations[lang][isExcluded ? 'include_site' : 'exclude_site']} ${domain}`;
 }
 
 function loadOptions() {
@@ -78,7 +94,47 @@ async function getCurrentTabDomain() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     await loadTranslations();
-    loadOptions();
+
+    chrome.storage.local.get(defaults, async opts => {
+        applyI18n(opts.language);
+
+        document.getElementById('salary').value = opts.salary;
+        document.getElementById('salary-type').value = opts.salaryType;
+        document.getElementById('currency').value = opts.currency;
+        document.getElementById('hours-per-day').value = opts.hoursPerDay;
+        document.getElementById('days-per-month').value = opts.daysPerMonth;
+        document.getElementById('enabled').checked = opts.enabled;
+        document.getElementById('language').value = opts.language;
+
+        const excludeButton = document.getElementById('exclude-site-button');
+
+        const domain = await getCurrentTabDomain();
+        if (!domain) {
+            excludeButton.disabled = true;
+            excludeButton.textContent = translations[opts.language].cannot_determine_site;
+        } else {
+            excludeButton.dataset.domain = domain;
+            chrome.storage.local.get({ blacklist: [] }, ({ blacklist }) => {
+                currentDomain = domain;
+                currentBlacklist = blacklist;
+                setExcludeButton(domain, blacklist, opts.language);
+            });
+        }
+
+        excludeButton.addEventListener('click', () => {
+            const domain = excludeButton.dataset.domain;
+            chrome.storage.local.get({ blacklist: [] }, ({ blacklist }) => {
+                const isExcluded = blacklist.includes(domain);
+                const newList = isExcluded
+                    ? blacklist.filter(d => d !== domain)
+                    : [...blacklist, domain];
+                chrome.storage.local.set({ blacklist: newList }, () => {
+                    currentBlacklist = newList;
+                    setExcludeButton(domain, newList, document.getElementById('language').value);
+                });
+            });
+        });
+    });
 
     document.getElementById('settings-form').addEventListener('change', saveOptions);
     document.getElementById('language').addEventListener('change', e => {
@@ -86,41 +142,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const currentSalaryType = salaryTypeSelect.value;
         applyI18n(e.target.value);
         salaryTypeSelect.value = currentSalaryType;
-    });
-
-    const excludeButton = document.getElementById('exclude-site-button');
-
-    function setButtonState(domain, excluded) {
-        excludeButton.classList.toggle('exclude', !excluded);
-        excludeButton.classList.toggle('include', excluded);
-        excludeButton.disabled = false;
-
-        if (excluded) {
-            excludeButton.textContent = `${translations[lang].include_site} ${domain}`;
-        } else {
-            excludeButton.textContent = `${translations[lang].exclude_site} ${domain}`;
+        if (currentDomain && currentBlacklist) {
+            setExcludeButton(currentDomain, currentBlacklist, e.target.value);
         }
-    }
-
-    const domain = await getCurrentTabDomain();
-    if (!domain) {
-        excludeButton.disabled = true;
-        excludeButton.textContent = translations[lang].cannot_determine_site;
-    } else {
-        excludeButton.dataset.domain = domain;
-        chrome.storage.local.get({ blacklist: [] }, ({ blacklist }) => {
-            setButtonState(domain, blacklist.includes(domain));
-        });
-    }
-
-    excludeButton.addEventListener('click', () => {
-        const domain = excludeButton.dataset.domain;
-        chrome.storage.local.get({ blacklist: [] }, ({ blacklist }) => {
-            const isExcluded = blacklist.includes(domain);
-            const newList = isExcluded ? blacklist.filter(d => d !== domain) : [...blacklist, domain];
-            chrome.storage.local.set({ blacklist: newList }, () => {
-                setButtonState(domain, !isExcluded);
-            });
-        });
     });
 });
