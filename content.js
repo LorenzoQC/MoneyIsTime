@@ -1,4 +1,4 @@
-/* MoneyIsTime – content script (refactored 2025‑07‑03) */
+/* MoneyIsTime – content script (updated 2025-07-03) */
 
 (async () => {
   // ---------- Storage & Initialization ----------
@@ -33,6 +33,22 @@
   // ---------- Translations & Styles ----------
   const translations = await getTranslations(language);
   injectStyles(); // Add CSS classes for badges
+
+  // ---------- Currency symbol map ----------
+  /* Global mapping from symbol to currency code */
+  const symbolMap = {
+    '$': 'USD',
+    '€': 'EUR',
+    '£': 'GBP',
+    '¥': 'JPY',
+    '₹': 'INR',
+    'C$': 'CAD',
+    'A$': 'AUD',
+    'CHF': 'CHF',
+    'RUB': 'RUB',
+    'R$': 'BRL',
+    '₺': 'TRY'
+  };
 
   // ---------- Prepare Regex ----------
   const priceRegex = buildPriceRegex();
@@ -82,11 +98,6 @@
 
   /* Escape special chars and build a global price regex */
   function buildPriceRegex() {
-    const symbolMap = {
-      '$': 'USD', '€': 'EUR', '£': 'GBP', '¥': 'JPY',
-      '₹': 'INR', 'C$': 'CAD', 'A$': 'AUD', 'CHF': 'CHF',
-      'RUB': 'RUB', 'R$': 'BRL', '₺': 'TRY'
-    };
     const esc = s => s.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
     const symbols = Object.keys(symbolMap).map(esc).join('|');
     return new RegExp(
@@ -131,7 +142,7 @@
     document.head.appendChild(style);
   }
 
-  /* Normalize numbers based on separators */
+  /* Normalize number strings into parseable format */
   function normalize(raw) {
     const dots = (raw.match(/\./g) || []).length;
     const commas = (raw.match(/,/g) || []).length;
@@ -208,8 +219,11 @@
     const mins = Math.round(left * 60);
 
     const units = [
-      [y, t.years_unit], [m, t.months_unit],
-      [d, t.days_unit], [h, t.hours_unit], [mins, t.minutes_unit]
+      [y, t.years_unit],
+      [m, t.months_unit],
+      [d, t.days_unit],
+      [h, t.hours_unit],
+      [mins, t.minutes_unit]
     ].filter(([n]) => n)
       .map(([n, u]) => `${n}${u.charAt(0).toLowerCase()}`);
 
