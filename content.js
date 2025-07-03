@@ -1,212 +1,218 @@
-/* MoneyIsTime – content script (optimized 2025‑07‑02)
-   Functionality unchanged; structure is more modular and performant. */
+/* MoneyIsTime – content script (refactored 2025‑07‑03) */
 
-(() => {
-  /* ---------- Config & constants ---------- */
-  const SETTINGS_KEYS = [
-    'salary', 'salaryType', 'currency',
-    'hoursPerDay', 'daysPerMonth', 'enabled', 'language'
-  ];
-  const SYMBOL_TO_CODE = {
-    '$': 'USD', '€': 'EUR', '£': 'GBP', '¥': 'JPY', '₹': 'INR',
-    'C$': 'CAD', 'A$': 'AUD', 'CHF': 'CHF', 'RUB': 'RUB',
-    'R$': 'BRL', '₺': 'TRY'
-  };
+(async () => {
+  // ---------- Storage & Initialization ----------
+  /* Fetch both blacklist and user settings in a single call */
+  const {
+    blacklist = [],
+    salary,
+    salaryType,
+    currency,
+    hoursPerDay,
+    daysPerMonth,
+    enabled,
+    language
+  } = await storageGet([
+    'blacklist',
+    'salary',
+    'salaryType',
+    'currency',
+    'hoursPerDay',
+    'daysPerMonth',
+    'enabled',
+    'language'
+  ]);
 
-  /* Pre‑compiles a regex that matches both currency symbols and ISO codes (3 letters) */
-  const SYMBOLS_PART = Object.keys(SYMBOL_TO_CODE)
-    .map(s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
-  const ISO_PART = '[A-Z]{3}';
-  const PRICE_PATTERN =
-    `(${SYMBOLS_PART}|${ISO_PART})[\s\u00A0\u202F]*([\d.,]+)|` +
-    `([\d.,]+)[\s\u00A0\u202F]*(${SYMBOLS_PART}|${ISO_PART})`;
-  const PRICE_REGEX = new RegExp(PRICE_PATTERN, 'gu');
-
-  const DAY_MS = 86_400_000;
-  const RATES_TTL_MS = 24 * DAY_MS; // cache currency rates for 24 h
-
-  /* ---------- State ---------- */
-  const processedNodes = new WeakSet();
-  const rateCache = new Map(); // key: base currency, value: {ts:number, rates:object}
-
-  /* ---------- Utility ---------- */
-  const escapeHtml = s => s.replace(/[&<>"']/g, m =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
-
-  // Normalises a locale‑formatted number string to JS‑parsable format
-  const normalizeNumber = raw => {
-    const dot = (raw.match(/\./g) || []).length;
-    const com = (raw.match(/,/g) || []).length;
-    if (dot && com) return raw.replace(/\./g, '').replace(',', '.');   // 1.234,56 → 1234.56
-    if (com && !dot) return raw.replace(',', '.');                     // 199,99 → 199.99
-    if (dot === 1 && /^\d{1,3}\.\d{3}$/.test(raw))
-      return raw.replace(/\./g, '');                                  // 12.345 → 12345
-    return raw;                                                        // 199.99  /  19999
-  };
-
-  const unitAbbr = u => u.charAt(0).toLowerCase();
-
-  /* Converts user salary to an hourly wage (number) */
-  function toHourly({ salary, salaryType, hoursPerDay, daysPerMonth }) {
-    if (salaryType === 'daily') return salary / hoursPerDay;
-    if (salaryType === 'monthly') return salary / (daysPerMonth * hoursPerDay);
-    return salary; // already hourly
+  const domain = location.hostname;
+  if (!enabled || blacklist.includes(domain)) {
+    console.log('[MoneyIsTime] Stopped:', domain);
+    return;
   }
+  console.log('[MoneyIsTime] Active with settings', { salary, salaryType, currency, hoursPerDay, daysPerMonth, language });
 
-  /* Splits a number of hours into Y, M, D, H, Min components */
-  function splitWorkTime(totalHours, { hoursPerDay, daysPerMonth }) {
-    const hMonth = hoursPerDay * daysPerMonth;
-    const hYear = hMonth * 12;
+  // ---------- Translations & Styles ----------
+  const translations = await getTranslations(language);
+  injectStyles(); // Add CSS classes for badges
 
-    const y = Math.floor(totalHours / hYear); totalHours -= y * hYear;
-    const m = Math.floor(totalHours / hMonth); totalHours -= m * hMonth;
-    const d = Math.floor(totalHours / hoursPerDay);
-    totalHours -= d * hoursPerDay;
-    const h = Math.floor(totalHours);
-    const min = Math.round((totalHours - h) * 60);
+  // ---------- Prepare Regex ----------
+  const priceRegex = buildPriceRegex();
 
-    return { y, m, d, h, min };
-  }
+  // ---------- DOM Observation ----------
+  /* Use a debounced observer to scan new text nodes */
+  const observer = new MutationObserver(debounce(() => scanTextNodes(document.body), 100));
+  observer.observe(document.body, { childList: true, subtree: true });
 
-  /* Returns the final badge string (compact or extended) */
-  function formatWorkTime(parts, t, compact) {
-    const { years_unit, months_unit, days_unit, hours_unit, minutes_unit } = t;
-    const map = [
-      [parts.y, years_unit],
-      [parts.m, months_unit],
-      [parts.d, days_unit],
-      [parts.h, hours_unit],
-      [parts.min, minutes_unit]
-    ].filter(([n]) => n);
+  // Initial scan after a short delay
+  setTimeout(() => scanTextNodes(document.body), 120);
 
-    if (!map.length) map.push([0, minutes_unit]); // fallback to 0 minutes
+  // ---------- Helpers ----------
 
-    if (compact) {
-      const [a, b] = map;
-      return map.length === 1
-        ? `${a[0]}${unitAbbr(a[1])}`
-        : `${a[0]}${unitAbbr(a[1])} ${b[0]}${unitAbbr(b[1])}`;
-    }
-    return map.slice(0, 2).map(([n, u]) => `${n} ${u}`).join(' ');
-  }
-
-  /* ---------- Storage helpers ---------- */
-  function getStorage(keys) {
+  /* Promise wrapper for chrome.storage.local.get */
+  function storageGet(keys) {
     return new Promise(res => chrome.storage.local.get(keys, res));
   }
 
-  /* ---------- Currency exchange with cache & memoisation ---------- */
+  /* Promise wrapper for chrome.runtime.sendMessage */
+  function sendMessage(msg) {
+    return new Promise(res => chrome.runtime.sendMessage(msg, res));
+  }
+
+  /* Load translations via message and pick correct language */
+  async function getTranslations(lang) {
+    const res = await sendMessage({ type: 'getTranslations' });
+    return (res.translations[lang] || res.translations.en) || {};
+  }
+
+  /* Caches exchange rates per base currency for 24h */
+  const ratesCache = {};
   async function getRates(base) {
-    const cached = rateCache.get(base);
-    if (cached && (Date.now() - cached.ts) < RATES_TTL_MS) return cached.rates;
-
-    /* Memoisation for concurrent requests */
-    if (cached?.promise) return cached.promise;
-
-    const promise = new Promise(resolve => {
-      chrome.runtime.sendMessage({ type: 'getRates', base }, msg => {
-        if (!msg?.rates) {
-          console.warn('[MoneyIsTime] Exchange API error:', msg?.error);
-          rateCache.delete(base);
-          return resolve({});
-        }
-        rateCache.set(base, { ts: Date.now(), rates: msg.rates });
-        resolve(msg.rates);
-      });
-    });
-    rateCache.set(base, { ts: 0, promise }); // mark request as in‑flight
-    return promise;
-  }
-
-  /* ---------- Annotate price → work time ---------- */
-  async function annotate(node, amount, code, settings, t) {
-    /* 1. Get exchange rate */
-    const ratesBase = await getRates(settings.currency);
-    let rate = ratesBase[code];
-    if (!rate) {
-      const reverse = await getRates(code);
-      rate = reverse?.[settings.currency] ? 1 / reverse[settings.currency] : null;
+    const now = Date.now();
+    if (ratesCache[base] && now - ratesCache[base].ts < 864e5) {
+      return ratesCache[base].rates;
     }
-    if (!rate) return console.warn(`[MoneyIsTime] No FX ${code}→${settings.currency}`);
-
-    /* 2. Compute work time */
-    const converted = amount * rate;
-    const hourly = toHourly(settings);
-    const totalHours = converted / hourly;
-    const parts = splitWorkTime(totalHours, settings);
-
-    /* 3. Build badge */
-    const badge = document.createElement('span');
-    badge.textContent = `🕒 ${formatWorkTime(parts, t, processedNodes.size > 15)}`;
-
-    const dark = matchMedia('(prefers-color-scheme: dark)').matches;
-    Object.assign(badge.style, {
-      backgroundColor: dark ? 'rgba(100,108,255,.2)' : 'rgba(100,108,255,.12)',
-      border: dark ? '1px solid rgba(100,108,255,.4)' : '1px solid rgba(100,108,255,.2)',
-      marginLeft: '4px', fontSize: '0.82em', padding: '4px 6px',
-      borderRadius: '6px', lineHeight: '1.2', fontWeight: '500',
-      whiteSpace: 'nowrap', color: 'inherit', boxShadow: '0 1px 3px rgba(0,0,0,.1)'
-    });
-
-    node.insertAdjacentElement('afterend', badge);
+    console.log('[MoneyIsTime] Fetch rates for', base);
+    const res = await sendMessage({ type: 'getRates', base });
+    if (!res.rates) {
+      console.warn('[MoneyIsTime] No rates for', base);
+      return {};
+    }
+    ratesCache[base] = { rates: res.rates, ts: now };
+    return res.rates;
   }
 
-  /* ---------- Scan text nodes ---------- */
-  function scan(root, settings, t) {
+  /* Escape special chars and build a global price regex */
+  function buildPriceRegex() {
+    const symbolMap = {
+      '$': 'USD', '€': 'EUR', '£': 'GBP', '¥': 'JPY',
+      '₹': 'INR', 'C$': 'CAD', 'A$': 'AUD', 'CHF': 'CHF',
+      'RUB': 'RUB', 'R$': 'BRL', '₺': 'TRY'
+    };
+    const esc = s => s.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
+    const symbols = Object.keys(symbolMap).map(esc).join('|');
+    return new RegExp(
+      `(${symbols})[\\s\\u00A0\\u202F]*([\\d.,]+)|([\\d.,]+)[\\s\\u00A0\\u202F]*(${symbols})`,
+      'gu'
+    );
+  }
+
+  /* Debounce function calls within a delay */
+  function debounce(fn, ms = 100) {
+    let timeout;
+    return (...args) => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => fn(...args), ms);
+    };
+  }
+
+  /* Inject CSS for the .money-is-time-badge class */
+  function injectStyles() {
+    const css = `
+      .money-is-time-badge {
+        background: rgba(100,108,255,0.12);
+        border: 1px solid rgba(100,108,255,0.2);
+        margin-left: 4px;
+        font-size: 0.82em;
+        padding: 4px 6px;
+        border-radius: 6px;
+        line-height: 1.2;
+        font-weight: 500;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        white-space: nowrap;
+      }
+      @media (prefers-color-scheme: dark) {
+        .money-is-time-badge {
+          background: rgba(100,108,255,0.2);
+          border-color: rgba(100,108,255,0.4);
+        }
+      }
+    `;
+    const style = document.createElement('style');
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  /* Normalize numbers based on separators */
+  function normalize(raw) {
+    const dots = (raw.match(/\./g) || []).length;
+    const commas = (raw.match(/,/g) || []).length;
+    if (dots && commas) return raw.replace(/\./g, '').replace(',', '.');
+    if (commas) return raw.replace(',', '.');
+    if (dots === 1 && /^\d{1,3}\.\d{3}$/.test(raw)) return raw.replace('.', '');
+    return raw;
+  }
+
+  // ---------- Scanning & Annotation ----------
+
+  function scanTextNodes(root) {
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    let n;
-    while ((n = walker.nextNode())) {
-      const parent = n.parentElement;
-      if (!parent || processedNodes.has(parent)) continue;
+    let node;
+    while (node = walker.nextNode()) {
+      const parent = node.parentElement;
+      if (!parent || parent.classList.contains('money-is-time-processed')) continue;
 
-      const txt = n.nodeValue;
-      if (!txt || (!/[$€£¥₹]|[A-Z]{3}/.test(txt))) continue;
+      const text = node.nodeValue;
+      if (!text || !/[€$£¥₹]/.test(text)) continue;
 
-      for (const m of txt.matchAll(PRICE_REGEX)) {
-        const [, s1, v1, v2, s2] = m;
-        const symbolOrIso = s1 || s2;
-        const numRaw = v1 || v2;
-        const iso = SYMBOL_TO_CODE[symbolOrIso] || (symbolOrIso.length === 3 ? symbolOrIso : null);
-        if (!iso) continue;
+      for (const [, s1, v1, v2, s2] of text.matchAll(priceRegex)) {
+        const symbol = s1 || s2;
+        const raw = v1 || v2;
+        const code = symbolMap[symbol] || (symbol.length === 3 && symbol);
+        const value = parseFloat(normalize(raw));
+        if (!code || isNaN(value)) continue;
 
-        const value = parseFloat(normalizeNumber(numRaw));
-        if (Number.isNaN(value)) continue;
-
-        processedNodes.add(parent);
-        annotate(parent, value, iso, settings, t);
-        break; // annotate only once per node
+        annotate(parent, value, code);
+        parent.classList.add('money-is-time-processed');
+        break;
       }
     }
   }
 
-  /* ---------- Main entry ---------- */
-  (async () => {
-    const domain = location.hostname;
-    const { blacklist = [] } = await getStorage(['blacklist']);
-    if (blacklist.includes(domain)) return console.log(`[MoneyIsTime] Blacklisted ${domain}`);
+  /* Convert amount → hours, format with units */
+  async function annotate(el, amount, code) {
+    let rates = await getRates(currency);
+    let rate = rates[code] || null;
+    if (!rate) {
+      const rev = await getRates(code);
+      rate = rev[currency] ? 1 / rev[currency] : null;
+    }
+    if (!rate) return;
 
-    const settings = await getStorage(SETTINGS_KEYS);
-    if (!settings.enabled) return;
+    const converted = amount * rate;
+    const hourlyRate = (() => {
+      if (salaryType === 'daily') return salary / hoursPerDay;
+      if (salaryType === 'monthly') return salary / (daysPerMonth * hoursPerDay);
+      return salary;
+    })();
 
-    const { translations } = await new Promise(res =>
-      chrome.runtime.sendMessage({ type: 'getTranslations' }, res));
-    const t = translations?.[settings.language] ?? translations?.en ?? {};
-    if (!Object.keys(t).length) return console.warn('[MoneyIsTime] No translations');
+    const hoursNeeded = converted / hourlyRate;
+    const text = formatDuration(hoursNeeded, translations);
 
-    /* Initial scan; small delay for page builders */
-    setTimeout(() => scan(document.body, settings, t), 120);
+    const span = document.createElement('span');
+    span.textContent = `🕒 ${text}`;
+    span.className = 'money-is-time-badge';
+    el.insertAdjacentElement('afterend', span);
 
-    /* MutationObserver with debounce */
-    let scheduled = false;
-    const schedule = () => {
-      if (scheduled) return;
-      scheduled = true;
-      (window.requestIdleCallback || setTimeout)(() => {
-        scan(document.body, settings, t);
-        scheduled = false;
-      }, 300);
-    };
-    new MutationObserver(schedule)
-      .observe(document.body, { childList: true, subtree: true });
-  })();
+    console.log('[MoneyIsTime] Annotated', amount, code, '→', text);
+  }
+
+  /* Break hours into y, m, d, h, min and create compact label */
+  function formatDuration(hours, t) {
+    const totalHMonth = daysPerMonth * hoursPerDay;
+    const totalHYear = totalHMonth * 12;
+    let left = hours;
+
+    const y = Math.floor(left / totalHYear); left -= y * totalHYear;
+    const m = Math.floor(left / totalHMonth); left -= m * totalHMonth;
+    const d = Math.floor(left / hoursPerDay); left -= d * hoursPerDay;
+    const h = Math.floor(left); left -= h;
+    const mins = Math.round(left * 60);
+
+    const units = [
+      [y, t.years_unit], [m, t.months_unit],
+      [d, t.days_unit], [h, t.hours_unit], [mins, t.minutes_unit]
+    ].filter(([n]) => n)
+      .map(([n, u]) => `${n}${u.charAt(0).toLowerCase()}`);
+
+    return units.length > 2 ? units.slice(0,2).join(' ') : units.join(' ');
+  }
 })();
